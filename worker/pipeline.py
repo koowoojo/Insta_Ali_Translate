@@ -1,8 +1,8 @@
 """
-5단계 동기 파이프라인 오케스트레이션.
+6단계 동기 파이프라인 오케스트레이션.
 
-AliExpress URL부터 최종 9:16 숏폼 MP4까지 scraper → audio_processor →
-script_writer → tts_generator → video_editor 순서로 실행한다.
+AliExpress URL부터 최종 9:16 숏폼 MP4·HTML 쇼케이스까지 scraper →
+audio_processor → script_writer → tts_generator → video_editor → showcase 순서로 실행한다.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from moviepy import VideoFileClip
 
 from modules import audio_processor, scraper, script_writer, tts_generator, video_editor
 from utils.config import get_settings
+from utils.showcase_generator import generate_showcase
 
 # 파이프라인 단계별 진행 로그용 모듈 로거
 logger = logging.getLogger(__name__)
@@ -43,13 +44,14 @@ def run_pipeline(url: str, job_id: str | None = None) -> dict:
     3. generate_script — Claude 숏폼 대본 생성
     4. generate_speech — OpenAI TTS
     5. compose_shorts — 9:16 합성·자막·루프 동기화
+    6. generate_showcase — Opal 스타일 HTML 쇼케이스 생성
 
     Args:
         url: AliExpress 상품 페이지 URL
         job_id: 기존 작업 ID 재사용 시 지정; None이면 uuid4() 생성
 
     Returns:
-        job_id, script, output_path 키를 가진 결과 dict
+        job_id, script, output_path, showcase_path 키를 가진 결과 dict
     """
     settings = get_settings()
     job_id = job_id or str(uuid.uuid4())
@@ -94,4 +96,17 @@ def run_pipeline(url: str, job_id: str | None = None) -> dict:
         raw, dub, script, final, target_duration_sec=target_duration
     )
 
-    return {"job_id": job_id, "script": script, "output_path": final}
+    logger.info("[%s] showcase", job_id)
+    showcase_path = generate_showcase(
+        job_id=job_id,
+        job_dir=base,
+        product_url=url,
+        base_url=settings.showcase_base_url,
+    )
+
+    return {
+        "job_id": job_id,
+        "script": script,
+        "output_path": final,
+        "showcase_path": str(showcase_path),
+    }
