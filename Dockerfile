@@ -7,8 +7,9 @@
 FROM python:3.11-slim-bookworm
 
 # ffmpeg — MoviePy 영상 편집·인코딩에 필요
+# fonts-nanum — Docker 자막 렌더링용 한글 폰트 (SUBTITLE_FONT_PATH)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get install -y --no-install-recommends ffmpeg fonts-nanum \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
