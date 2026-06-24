@@ -134,3 +134,61 @@ tests/test_showcase_generator.py::test_generate_showcase_creates_html PASSED [10
 - 커밋 메시지: `feat: add Opal-style HTML showcase generator`
 - 변경 파일: `utils/showcase_generator.py`, `tests/test_showcase_generator.py`
 
+---
+
+## 2026-06-24 — Task 4: 파이프라인 6단계 showcase 추가
+
+### 사용자 요청
+- `worker/pipeline.py`에 showcase 생성 단계(6단계) 추가
+- `compose_shorts` 이후 `generate_showcase` 호출, 반환 dict에 `showcase_path` 포함
+- 커밋: `feat: add showcase generation as pipeline step 6`
+
+### 수행 작업
+1. **worker/pipeline.py**
+   - `utils.showcase_generator.generate_showcase` import
+   - 모듈·함수 docstring을 6단계 파이프라인으로 갱신
+   - `compose_shorts` 직후 showcase 단계 로그 및 `generate_showcase(job_id, job_dir=base, product_url=url, base_url=settings.showcase_base_url)` 호출
+   - 반환값에 `"showcase_path": str(showcase_path)` 추가
+
+### Git
+- 커밋 SHA: `6e919fc`
+- 커밋 메시지: `feat: add showcase generation as pipeline step 6`
+- 변경 파일: `worker/pipeline.py` (1 file, +20 / -5)
+
+---
+
+## 2026-06-24 — Task 5: DB·워커 tasks·notifier 확장
+
+### 사용자 요청
+- `db/models.py` Job 모델에 `showcase_path` 필드 추가
+- `worker/tasks.py`: STEPS에 `"showcase"` 추가, `_update`에 showcase 파라미터, 성공 시 showcase_path 저장 및 텔레그램 성공 알림
+- `utils/notifier.py`: `format_success_message`, `send_telegram_success` 추가, 실패 메시지 prefix를 `[Insta_Ali_Translate]`로 변경
+- `python -m pytest tests/test_config.py tests/test_notifier.py -v` 실행
+- 커밋: `feat: persist showcase_path and add telegram success notification`
+
+### 수행 작업
+1. **db/models.py** — `showcase_path: Mapped[Optional[str]]` (Text, nullable) 추가
+2. **worker/tasks.py**
+   - `STEPS` 끝에 `"showcase"` 추가
+   - `_update(..., showcase: str | None = None)` 및 `job.showcase_path` 갱신
+   - 성공 `_update` step을 `"showcase"`로, `showcase=result.get("showcase_path")` 전달
+   - `get_settings`, `send_telegram_success` import
+   - 성공 후 MP4·쇼케이스 URL 조립하여 `send_telegram_success` 호출
+3. **utils/notifier.py**
+   - `format_success_message` — `[Insta_Ali_Translate] 릴스 생성 완료 ✅` + URL/MP4/쇼케이스 링크
+   - `send_telegram_success` — Telegram Bot API 전송 (자격 증명 미설정 시 스킵)
+   - `format_failure_message` prefix → `[Insta_Ali_Translate] 작업 실패`
+
+### 테스트 결과
+```
+python -m pytest tests/test_config.py tests/test_notifier.py -v
+tests/test_config.py::test_settings_defaults PASSED
+tests/test_notifier.py::test_format_failure_message PASSED
+2 passed in 0.30s
+```
+
+### Git
+- 커밋 SHA: `0f3d7ec`
+- 커밋 메시지: `feat: persist showcase_path and add telegram success notification`
+- 변경 파일: `db/models.py`, `worker/tasks.py`, `utils/notifier.py` (3 files, +90 / -7)
+
