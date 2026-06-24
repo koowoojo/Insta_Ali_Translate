@@ -51,17 +51,49 @@ SUBTITLE_FONT_PATH=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
 
 ### 2. AliExpress 세션 준비
 
-Compose 기동 **전** 또는 **후** 호스트에서 Playwright 로그인 세션을 저장합니다.
+**로그인이 필수는 아닙니다.** 공개 상품 페이지는 세션 없이도 스크래핑될 수 있습니다.  
+로그인·캡차 때문에 `python main.py --login`이 안 될 때는 아래 대안을 사용하세요.
+
+#### 방법 A — 세션 없이 바로 테스트 (가장 간단)
+
+세션 파일이 없으면 스크래퍼가 로그인 없이 페이지를 엽니다. n8n Form에 URL을 넣고 먼저 시도해 보세요.
+
+#### 방법 B — Chrome 쿠키 가져오기 (권장 대안)
+
+1. **일반 Chrome**에서 https://ko.aliexpress.com 로그인
+2. Chrome 확장 **Cookie-Editor** 설치 → aliexpress.com → **Export** → JSON 저장
+3. 프로젝트에서 변환:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python main.py --import-cookies C:\Users\YOU\Downloads\cookies.json
+```
+
+세션 파일: `assets/sessions/aliexpress_state.json` (Docker `./assets` 볼륨과 공유)
+
+#### 방법 C — Playwright 로그인 (개선됨)
+
+`AliExpress_로그인.bat` 또는:
+
+```powershell
+python main.py --login
+```
+
+- 설치된 **Chrome → Edge → Chromium** 순으로 브라우저 시도
+- `https://ko.aliexpress.com` 한국 사이트로 접속
+
+#### 방법 D — 프록시 (지역 차단 시)
+
+`.env`에 `PROXY_URL=http://user:pass@host:port` 설정
+
+Compose 기동 **전** 또는 **후** 호스트에서 세션을 준비합니다.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 playwright install chromium
-python main.py --login
 ```
-
-세션 파일: `assets/sessions/aliexpress_state.json` (Docker 볼륨 `./assets`로 공유)
 
 ### 3. 기동
 

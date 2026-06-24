@@ -13,8 +13,12 @@ import argparse
 import csv
 import logging
 
+from pathlib import Path
+
 from modules.scraper import save_login_session
+from utils.config import get_settings
 from utils.logging_setup import setup_logging
+from utils.session_import import import_cookies_file
 from worker.pipeline import run_pipeline
 
 logger = logging.getLogger(__name__)
@@ -27,7 +31,19 @@ def main() -> None:
     parser.add_argument("--url", help="처리할 AliExpress 상품 URL")
     parser.add_argument("--batch", help="url 컬럼이 있는 CSV 파일 경로")
     parser.add_argument("--login", action="store_true", help="Headful 로그인 후 세션 저장")
+    parser.add_argument(
+        "--import-cookies",
+        metavar="JSON",
+        help="Chrome Cookie-Editor 등에서보낸 쿠키 JSON → storage_state 변환",
+    )
     args = parser.parse_args()
+
+    if args.import_cookies:
+        settings = get_settings()
+        dest = Path(settings.aliexpress_session_path)
+        out = import_cookies_file(Path(args.import_cookies), dest)
+        logger.info("쿠키 세션 저장 완료: %s", out)
+        return
 
     if args.login:
         save_login_session()

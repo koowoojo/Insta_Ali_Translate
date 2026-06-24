@@ -187,6 +187,25 @@ def scrape_video(url: str, output_path: str, max_retries: int = 3) -> str:
     raise PipelineError("scraping", str(last_err))
 
 
+def _launch_headful_browser(playwright):
+    """
+    설치된 Chrome 채널을 우선 사용하고, 없으면 Playwright Chromium으로 폴백한다.
+
+    AliExpress는 내장 Chromium보다 실제 Chrome/Edge 로그인 성공률이 높다.
+    """
+    launch_kwargs = {"headless": False}
+    for channel in ("chrome", "msedge", None):
+        try:
+            if channel:
+                logger.info("브라우저 채널 시도: %s", channel)
+                return playwright.chromium.launch(channel=channel, **launch_kwargs)
+            logger.info("브라우저 채널 폴백: playwright chromium")
+            return playwright.chromium.launch(**launch_kwargs)
+        except Exception as exc:
+            logger.warning("채널 %s 기동 실패: %s", channel or "chromium", exc)
+    raise PipelineError("scraping", "Headful 브라우저를 기동할 수 없습니다. Chrome 또는 Edge를 설치하세요.")
+
+
 def save_login_session() -> None:
     """
     Headful 브라우저로 AliExpress에 수동 로그인 후 storage_state를 저장한다.
@@ -194,6 +213,9 @@ def save_login_session() -> None:
     사용자가 터미널에서 Enter를 누를 때까지 대기한 뒤,
     settings.aliexpress_session_path 경로에 JSON 세션 파일을 기록한다.
     이후 scrape_video 호출 시 해당 세션을 재사용한다.
+
+    로그인이 안 되면 utils.session_import 로 Chrome 쿠키를 가져오거나,
+    공개 상품 페이지는 세션 없이도 scrape_video 가 동작할 수 있다.
     """
     settings = get_settings()
     session_path = Path(settings.aliexpress_session_path)
@@ -201,10 +223,14 @@ def save_login_session() -> None:
 
     logger.info("Headful 브라우저로 AliExpress 로그인 세션 저장 시작")
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context()
+        browser = _launch_headful_browser(playwright)
+        context = browser.new_context(locale="ko-KR")
         page = context.new_page()
-        page.goto("https://www.aliexpress.com/")
+        page.goto("https://ko.aliexpress.com/", wait_until="domcontentloaded", timeout=60000)
+        print(
+            "\n[안내] 열린 브라우저에서 AliExpress 로그인을 완료한 뒤 이 터미널로 돌아와 Enter를 누르세요.\n"
+            "로그인이 계속 실패하면 README의 '쿠키 가져오기' 방법을 사용하세요.\n"
+        )
         input("AliExpress 로그인 후 Enter를 누르세요...")
         context.storage_state(path=str(session_path))
         browser.close()
