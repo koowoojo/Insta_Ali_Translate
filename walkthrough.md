@@ -85,3 +85,52 @@
 ### Git
 - 커밋 메시지: `chore: copy Insta_Ali worker codebase as independent base`
 
+---
+
+## 2026-06-24 — Task 2: 프로젝트 설정·브랜딩 변경
+
+### 사용자 요청
+- `utils/config.py`에 `showcase_base_url` 설정 추가 (nginx 경유 쇼케이스·외부 URL)
+- `.env.example`에 `SHOWCASE_BASE_URL`, n8n 관련 환경변수, Docker/Linux 자막 폰트 주석 추가
+- `web/app.py` FastAPI title/description을 Insta Ali Translate API로 리브랜딩
+- 커밋 후 walkthrough 갱신
+
+### 수행 작업
+1. **utils/config.py** — Telegram 필드 아래에 `showcase_base_url: str = "http://localhost:8080"` 추가
+2. **.env.example** — 하단에 `SHOWCASE_BASE_URL`, `N8N_ENCRYPTION_KEY`, `N8N_BASIC_AUTH_USER`, `N8N_BASIC_AUTH_PASSWORD`, Docker/Linux `SUBTITLE_FONT_PATH` 주석 추가
+3. **web/app.py** — FastAPI `title="Insta Ali Translate API"`, `description="n8n 연동 AliExpress 릴스 파이프라인 API"`로 변경
+
+### Git
+- 커밋 SHA: `f22de09`
+- 커밋 메시지: `feat: add showcase_base_url and rebrand API for Insta_Ali_Translate`
+- 변경 파일: `utils/config.py`, `.env.example`, `web/app.py` (3 files, +11 / -2)
+
+---
+
+## 2026-06-24 — Task 3: showcase_generator 모듈
+
+### 사용자 요청
+- `utils/showcase_generator.py` 및 `tests/test_showcase_generator.py` 구현 (구현 계획 Task 3)
+- Opal 스타일 HTML 쇼케이스: 다크모드 #121212, Pretendard CDN, 글래스모피즘, 9:16 플레이어, 대본·오디오, 툴바·뱃지
+- pytest 통과 후 커밋
+
+### 수행 작업
+1. **utils/showcase_generator.py** — `generate_showcase(job_id, job_dir, product_url, base_url) -> Path` 구현
+   - `script.txt` 읽기, `final_shorts.mp4`·`dubbing.mp3` nginx URL 조립
+   - `_escape_html`로 대본 HTML 이스케이프
+   - `showcase.html`을 job_dir에 생성
+2. **tests/test_showcase_generator.py** — `test_generate_showcase_creates_html(tmp_path)` 추가
+   - 대본 텍스트, 미디어 경로, 뱃지, `#121212` 포함 여부 검증
+
+### 테스트 결과
+```
+python -m pytest tests/test_showcase_generator.py -v
+tests/test_showcase_generator.py::test_generate_showcase_creates_html PASSED [100%]
+1 passed in 0.06s
+```
+
+### Git
+- 커밋 SHA: `445810d`
+- 커밋 메시지: `feat: add Opal-style HTML showcase generator`
+- 변경 파일: `utils/showcase_generator.py`, `tests/test_showcase_generator.py`
+
