@@ -61,11 +61,17 @@ SUBTITLE_FONT_PATH=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
 #### 방법 B — Chrome 쿠키 가져오기 (권장 대안)
 
 1. **일반 Chrome**에서 https://ko.aliexpress.com 로그인
-2. Chrome 확장 **Cookie-Editor** 설치 → aliexpress.com → **Export** → JSON 저장
-3. 프로젝트에서 변환:
+2. Chrome 웹스토어에서 **Cookie-Editor** (by cgagnier) 설치
+3. AliExpress 탭에서 확장 아이콘 클릭 → **Export** → **JSON** (배열 형식)
+4. `cookies.json`으로 저장
+
+**주의:** Hot Cleaner 등 **암호화 백업** `{version:2, data:"..."}` 형식은 지원하지 않습니다.
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+# 파일을 이 배치에 끌어다 놓거나:
+import_cookies.bat
+
+# 또는 직접:
 python main.py --import-cookies C:\Users\YOU\Downloads\cookies.json
 ```
 

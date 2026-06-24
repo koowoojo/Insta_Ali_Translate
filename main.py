@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import logging
 
 from pathlib import Path
@@ -41,8 +42,12 @@ def main() -> None:
     if args.import_cookies:
         settings = get_settings()
         dest = Path(settings.aliexpress_session_path)
-        out = import_cookies_file(Path(args.import_cookies), dest)
-        logger.info("쿠키 세션 저장 완료: %s", out)
+        try:
+            out = import_cookies_file(Path(args.import_cookies), dest)
+        except Exception as exc:
+            logger.error("%s", exc)
+            raise SystemExit(1) from exc
+        logger.info("쿠키 세션 저장 완료: %s (%d cookies)", out, len(json.loads(out.read_text(encoding="utf-8"))["cookies"]))
         return
 
     if args.login:

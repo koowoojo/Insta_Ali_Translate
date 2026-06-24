@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from utils.session_import import import_cookies_file, parse_cookie_json
+from utils.session_import import CookieImportError, import_cookies_file, parse_cookie_json
 
 
 def test_parse_cookie_editor_array():
@@ -23,6 +23,15 @@ def test_parse_cookie_editor_array():
     assert len(cookies) == 1
     assert cookies[0]["name"] == "aep_usuc_f"
     assert cookies[0]["sameSite"] == "Lax"
+
+
+def test_import_rejects_hotcleaner_encrypted():
+    try:
+        parse_cookie_json({"version": 2, "data": "encrypted_blob", "url": "http://x"})
+    except CookieImportError as exc:
+        assert "암호화" in str(exc)
+    else:
+        raise AssertionError("expected CookieImportError")
 
 
 def test_import_cookies_file(tmp_path: Path):
