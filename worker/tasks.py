@@ -12,12 +12,13 @@ from datetime import datetime, timezone
 
 from db.models import Job, JobLog
 from db.session import get_sync_session
+from utils.config import get_settings
 from utils.exceptions import PipelineError
-from utils.notifier import send_telegram_failure
+from utils.notifier import send_telegram_failure, send_telegram_success
 from worker.pipeline import run_pipeline
 
 # 파이프라인 단계 식별자 (로깅·상태 전이 참조용)
-STEPS = ["scraping", "transcribing", "scripting", "tts", "editing"]
+STEPS = ["scraping", "transcribing", "scripting", "tts", "editing", "showcase"]
 
 
 def _update(
@@ -28,6 +29,7 @@ def _update(
     error: str | None = None,
     output: str | None = None,
     script: str | None = None,
+    showcase: str | None = None,
 ) -> None:
     """
     Job 상태·산출물 필드를 갱신하고 JobLog 1건을 추가한다.
@@ -40,6 +42,7 @@ def _update(
         error: 실패 시 error_message·JobLog.message에 저장
         output: 성공 시 output_path
         script: 성공 시 script_text
+        showcase: 성공 시 showcase_path
     """
     job = db.get(Job, job_id)
     if not job:
@@ -49,6 +52,7 @@ def _update(
     job.error_message = error
     job.output_path = output or job.output_path
     job.script_text = script or job.script_text
+    job.showcase_path = showcase or job.showcase_path
     job.updated_at = datetime.now(timezone.utc)
     if status == "completed":
         job.completed_at = datetime.now(timezone.utc)
@@ -77,10 +81,15 @@ def process_video_job(job_id: str, url: str) -> None:
             db,
             job_id,
             "completed",
-            "editing",
+            "showcase",
             output=result["output_path"],
             script=result["script"],
+            showcase=result.get("showcase_path"),
         )
+        settings = get_settings()
+        mp4_url = f"{settings.showcase_base_url}/assets/jobs/{job_id}/final_shorts.mp4"
+        showcase_url = f"{settings.showcase_base_url}/showcase/{job_id}"
+        send_telegram_success(job_id, url, mp4_url, showcase_url)
     except Exception as e:
         step = e.step if isinstance(e, PipelineError) else "unknown"
         _update(db, job_id, "failed", step, error=str(e))

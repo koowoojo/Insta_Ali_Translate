@@ -49,6 +49,7 @@ class Job(Base):
     # --- 산출물·메타 ---
     script_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     output_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    showcase_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
