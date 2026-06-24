@@ -51,8 +51,13 @@
 ### 설계 문서
 - 경로: `docs/superpowers/specs/2026-06-24-n8n-reel-pipeline-design.md`
 - 섹션 1~3 사용자 전체 승인 완료
-- 스펙 자체 리뷰 완료 (TBD/모순 없음, 단일 구현 계획 범위 적정)
+- 스펙 자체 리뷰 완료
 - git 커밋 완료
 
+### 구현 계획 작성
+- 경로: `docs/superpowers/plans/2026-06-24-n8n-reel-pipeline.md`
+- Phase 1~6, Task 1~11 (복제 → showcase → API → Docker → n8n → E2E)
+- writing-plans 스킬 적용 완료
+
 ### 진행 상태
-- 사용자 스펙 리뷰 대기 → 승인 후 writing-plans 단계
+- 구현 실행 방식 선택 대기 (Subagent-Driven vs Inline)
