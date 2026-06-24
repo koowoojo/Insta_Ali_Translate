@@ -229,3 +229,62 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 - 커밋 메시지: `feat: add showcase route and showcase_url in jobs API`
 - 변경 파일: `web/routes/showcase.py`, `web/routes/jobs.py`, `web/app.py`, `tests/test_showcase_route.py`, `walkthrough.md`
 
+---
+
+## 2026-06-24 — Task 7: Dockerfile Nanum 폰트 추가
+
+### 사용자 요청
+- Docker 이미지에 `fonts-nanum` 패키지 추가 (자막 렌더링용)
+- `ffmpeg`와 동일한 `apt-get install` 라인에 포함
+
+### 수행 작업
+1. **Dockerfile** — `apt-get install`에 `fonts-nanum` 추가
+   - `SUBTITLE_FONT_PATH: /usr/share/fonts/truetype/nanum/NanumGothicBold.ttf`와 연동
+
+### Git
+- 커밋 SHA: `5241a6e`
+- 커밋 메시지: `chore: add Nanum font for Docker subtitle rendering`
+
+---
+
+## 2026-06-24 — Task 8: docker-compose 5서비스 스택
+
+### 사용자 요청
+- 기존 3서비스(redis + web + worker) compose를 n8n + redis + web + worker + nginx 5서비스 스택으로 교체
+- web/worker에 `SUBTITLE_FONT_PATH`, `SHOWCASE_BASE_URL` 환경변수 추가
+- n8n 서비스: 포트 5678, Asia/Seoul, workflows import 볼륨
+- nginx 서비스: 포트 8080→80
+
+### 수행 작업
+1. **docker-compose.yml** 전면 교체
+   - `redis`: redis:7-alpine (호스트 포트 노출 제거)
+   - `web`: FastAPI 8000, Redis·폰트·쇼케이스 URL env
+   - `worker`: RQ worker, 동일 env
+   - `n8n`: n8nio/n8n:latest, `./n8n_data`·`./n8n/workflows:/import:ro`
+   - `nginx`: nginx:alpine, `./nginx/nginx.conf`·`./assets` 마운트
+
+### Git
+- 커밋 SHA: `7917e7e`
+- 커밋 메시지: `feat: add docker-compose with n8n, worker, and nginx`
+
+---
+
+## 2026-06-24 — Task 9: nginx 설정 및 n8n workflows 디렉터리
+
+### 사용자 요청
+- `nginx/nginx.conf` — `/assets/` 정적 서빙(CORS), `/showcase/` web 프록시
+- `n8n/workflows/` 디렉터리 생성 (`.gitkeep`)
+
+### 수행 작업
+1. **nginx/nginx.conf** (신규)
+   - `location /assets/` — alias `/var/www/assets/`, CORS `*`
+   - `location /showcase/` — `proxy_pass http://web:8000/showcase/`
+2. **n8n/workflows/.gitkeep** (신규) — n8n 워크플로 import 마운트용 빈 디렉터리
+
+### 검증
+- `docker-compose.yml` YAML 구문 검증 통과 (Python yaml.safe_load)
+
+### Git
+- 커밋 SHA: `git log -1 --oneline` (nginx + walkthrough 커밋)
+- 커밋 메시지: `feat: add nginx config for assets and showcase proxy`
+
