@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 
 from db.models import Base
 from db.session import engine
-from web.routes import jobs, pages
+from web.routes import jobs, pages, showcase
 
 # web/static — CSS·JS 등 정적 자산 (없어도 마운트 가능)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -36,6 +36,8 @@ app = FastAPI(
 
 # REST API — prefix /api → /api/jobs ...
 app.include_router(jobs.router, prefix="/api")
+# HTML 쇼케이스 — /showcase/{id}
+app.include_router(showcase.router)
 # HTML 페이지 — /, /jobs, /jobs/{id}
 app.include_router(pages.router)
 

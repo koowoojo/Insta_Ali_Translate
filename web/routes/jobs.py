@@ -43,6 +43,7 @@ class JobSummaryResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    showcase_url: Optional[str] = None
 
 
 class JobLogResponse(BaseModel):
@@ -70,6 +71,13 @@ class BatchCreateResponse(BaseModel):
     count: int
 
 
+def _showcase_url(job: Job) -> Optional[str]:
+    """쇼케이스 HTML이 있거나 완료된 Job이면 상대 URL을 반환한다."""
+    if job.showcase_path or job.status == "completed":
+        return f"/showcase/{job.id}"
+    return None
+
+
 def _job_summary(job: Job) -> JobSummaryResponse:
     """Job ORM → API 요약 dict 변환."""
     return JobSummaryResponse(
@@ -81,6 +89,7 @@ def _job_summary(job: Job) -> JobSummaryResponse:
         created_at=job.created_at,
         updated_at=job.updated_at,
         completed_at=job.completed_at,
+        showcase_url=_showcase_url(job),
     )
 
 
@@ -96,6 +105,7 @@ def _job_detail(job: Job) -> JobDetailResponse:
         created_at=job.created_at,
         updated_at=job.updated_at,
         completed_at=job.completed_at,
+        showcase_url=_showcase_url(job),
         error_message=job.error_message,
         script_text=job.script_text,
         output_path=job.output_path,

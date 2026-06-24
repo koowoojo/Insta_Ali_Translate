@@ -192,3 +192,40 @@ tests/test_notifier.py::test_format_failure_message PASSED
 - 커밋 메시지: `feat: persist showcase_path and add telegram success notification`
 - 변경 파일: `db/models.py`, `worker/tasks.py`, `utils/notifier.py` (3 files, +90 / -7)
 
+---
+
+## 2026-06-24 — Task 6: Showcase 라우트 및 Jobs API 확장
+
+### 사용자 요청 (ultrawork)
+- `web/routes/showcase.py` 생성 — `GET /showcase/{job_id}` → `showcase.html` FileResponse
+- `web/routes/jobs.py` — `JobSummaryResponse`·`JobDetailResponse`에 `showcase_url: Optional[str]` 추가
+- `_job_summary`·`_job_detail`에서 `showcase_path` 존재 또는 `status == "completed"`일 때 `showcase_url=f"/showcase/{job.id}"` 설정
+- `web/app.py` — showcase 라우터 등록
+- `tests/test_showcase_route.py` — 존재하지 않는 job_id 404 테스트
+- 커밋: `feat: add showcase route and showcase_url in jobs API`
+
+### 수행 작업
+1. **web/routes/showcase.py** (신규)
+   - Job 조회 후 `showcase_path` 우선, 없으면 `assets/jobs/{id}/showcase.html` fallback
+   - 파일 미존재 시 404 `"Showcase not ready"`
+2. **web/routes/jobs.py**
+   - `_showcase_url(job)` 헬퍼 추가
+   - `JobSummaryResponse.showcase_url` 필드 및 `_job_summary`·`_job_detail` 반영
+3. **web/app.py**
+   - `showcase.router` import 및 pages 라우터 앞에 등록
+4. **tests/test_showcase_route.py** (신규)
+   - worker.pipeline/tasks 스텁 + StaticPool 인메모리 DB fixture
+   - `test_showcase_404_when_missing` — `GET /showcase/nonexistent-id` → 404
+
+### 테스트 결과
+```
+python -m pytest tests/test_showcase_route.py -v
+tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
+1 passed in 0.47s
+```
+
+### Git
+- 커밋 SHA: `092589e`
+- 커밋 메시지: `feat: add showcase route and showcase_url in jobs API`
+- 변경 파일: `web/routes/showcase.py`, `web/routes/jobs.py`, `web/app.py`, `tests/test_showcase_route.py`, `walkthrough.md`
+
