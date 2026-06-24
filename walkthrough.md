@@ -334,3 +334,35 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 - 커밋 SHA: `d90a13d`
 - 커밋 메시지: `docs: add setup guide and E2E verification steps`
 
+---
+
+## 2026-06-24 — Subagent-Driven 구현 전체 완료
+
+### 사용자 선택
+- 구현 실행 방식: **1) Subagent-Driven**
+
+### 완료 Task (1~11)
+| Task | 내용 | 커밋 |
+|------|------|------|
+| 1 | Insta_Ali 코드 복제 | `4b7ca20` |
+| 2 | showcase_base_url·브랜딩 | `f22de09` |
+| 3 | showcase_generator + 테스트 | `445810d` |
+| 4 | pipeline 6단계 | `6e919fc` |
+| 5 | DB·notifier 확장 | `0f3d7ec` |
+| 6 | showcase 라우트·API | `1a3a282` |
+| 7 | Dockerfile Nanum 폰트 | `5241a6e` |
+| 8 | docker-compose 5서비스 | `7917e7e` |
+| 9 | nginx 설정 | `6a1f5a8` |
+| 10 | n8n workflow JSON | `c941cd5` |
+| 11 | README·E2E 문서 | `f4d7268` |
+
+### 검증
+- `pytest` 핵심 4건 PASS (showcase_generator, showcase_route, config, notifier)
+
+### 다음 단계 (사용자 로컬)
+1. `.env.example` → `.env` 복사 후 API 키·Telegram·N8N_ENCRYPTION_KEY 설정
+2. `docker compose up -d --build`
+3. n8n (`:5678`)에서 `n8n/workflows/reel-pipeline.json` Import + Telegram 크리덴셜 연결
+4. `python main.py --login` (AliExpress 세션)
+5. n8n Form에 AliExpress URL 제출 → 텔레그램·쇼케이스 확인
+
