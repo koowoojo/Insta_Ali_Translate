@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="/jobs" class="text-decoration-none">&larr; 목록으로</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h1 class="h4 mb-0">작업 상세</h1>
+    <div>
+      {% if job.status == 'completed' %}
+        <a href="/api/jobs/{{ job.id }}/download" class="btn btn-sm btn-primary">MP4 다운로드</a>
+      {% elif job.status == 'failed' %}
+        <button type="button" class="btn btn-sm btn-warning" id="retry-btn">재시도</button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-2">ID</dt>
+      <dd class="col-sm-10"><code>{{ job.id }}</code></dd>
+
+      <dt class="col-sm-2">URL</dt>
+      <dd class="col-sm-10"><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.url }}</a></dd>
+
+      <dt class="col-sm-2">상태</dt>
+      <dd class="col-sm-10">{{ job.status }}</dd>
+
+      <dt class="col-sm-2">현재 단계</dt>
+      <dd class="col-sm-10">{{ job.current_step or '—' }}</dd>
+
+      <dt class="col-sm-2">재시도 횟수</dt>
+      <dd class="col-sm-10">{{ job.retry_count }}</dd>
+
+      <dt class="col-sm-2">생성</dt>
+      <dd class="col-sm-10">{{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') if job.created_at else '—' }}</dd>
+
+      {% if job.completed_at %}
+      <dt class="col-sm-2">완료</dt>
+      <dd class="col-sm-10">{{ job.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+      {% endif %}
+
+      {% if job.error_message %}
+      <dt class="col-sm-2 text-danger">에러</dt>
+      <dd class="col-sm-10"><pre class="text-danger mb-0 small">{{ job.error_message }}</pre></dd>
+      {% endif %}
+
+      {% if job.output_path %}
+      <dt class="col-sm-2">산출물</dt>
+      <dd class="col-sm-10"><code class="small">{{ job.output_path }}</code></dd>
+      {% endif %}
+    </dl>
+  </div>
+</div>
+
+{% if job.script_text %}
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-white"><h2 class="h5 mb-0">생성 대본</h2></div>
+  <div class="card-body"><pre class="mb-0 small">{{ job.script_text }}</pre></div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white"><h2 class="h5 mb-0">단계별 로그</h2></div>
+  <ul class="list-group list-group-flush">
+    {% for log in logs %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span><strong>{{ log.step }}</strong> — {{ log.message or '' }}</span>
+      <span class="text-muted small">{{ log.created_at.strftime('%H:%M:%S') if log.created_at else '' }}</span>
+    </li>
+    {% else %}
+    <li class="list-group-item text-muted">아직 로그가 없습니다.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% if job.status == 'failed' %}
+<script>
+  document.getElementById("retry-btn")?.addEventListener("click", async () => {
+    const resp = await fetch("/api/jobs/{{ job.id }}/retry", { method: "POST" });
+    if (resp.ok) {
+      window.location.reload();
+    } else {
+      const data = await resp.json();
+      alert(data.detail || "재시도 실패");
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}

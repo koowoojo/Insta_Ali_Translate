@@ -61,3 +61,27 @@
 
 ### 진행 상태
 - 구현 실행 방식 선택 대기 (Subagent-Driven vs Inline)
+
+---
+
+## 2026-06-24 — Task 1: Insta_Ali 워커 코드 복제 (Insta_Ali_Translate)
+
+### 사용자 요청
+- 소스 `E:\Vibe\Insta_Ali` 워커 코드베이스를 `E:\Vibe\Insta_Ali_Translate`에 독립 베이스로 복제
+- 제외: `.venv`, `.git`, `__pycache__`, `.pytest_cache`, `logs`, `.env`, `assets/jobs/*` 런타임 출력, `db/jobs.db`
+- 기존 `docs/`, `walkthrough.md`(Translate 버전) 유지 — 복제 후 walkthrough는 HEAD에서 복구 후 본 항목 추가
+
+### 수행 작업
+1. PowerShell `Get-ChildItem` + `Copy-Item`으로 소스 루트 항목만 대상에 복사
+2. `assets/jobs`, `assets/sessions`, `db` 디렉터리 생성; `assets/jobs` 내용 비움; `db/jobs.db`·`.env` 삭제
+3. 검증: `worker/pipeline.py`, `modules/scraper.py`, `web/app.py` → 모두 `True`
+4. `.gitignore`에 `.env` 포함 확인
+
+### 복제된 주요 항목
+- `worker/`, `modules/`, `utils/`, `web/`, `tests/`
+- `main.py`, `requirements.txt`, `pytest.ini`, `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.example`, `README.md`
+- `docs/superpowers` 내 Insta_Ali 쪽 2026-06-22 설계·계획 문서 추가(기존 2026-06-24 n8n 문서 유지)
+
+### Git
+- 커밋 메시지: `chore: copy Insta_Ali worker codebase as independent base`
+

@@ -1,0 +1,29 @@
+{% for job in jobs %}
+<tr>
+  <td><code class="small">{{ job.id[:8] }}…</code></td>
+  <td class="text-truncate" style="max-width: 220px;" title="{{ job.url }}">{{ job.url }}</td>
+  <td>
+    {% if job.status == 'completed' %}
+      <span class="badge text-bg-success status-badge">완료</span>
+    {% elif job.status == 'failed' %}
+      <span class="badge text-bg-danger status-badge">실패</span>
+    {% elif job.status == 'pending' %}
+      <span class="badge text-bg-secondary status-badge">대기</span>
+    {% else %}
+      <span class="badge text-bg-primary status-badge">{{ job.status }}</span>
+    {% endif %}
+  </td>
+  <td>{{ job.current_step or '—' }}</td>
+  <td class="small">{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else '—' }}</td>
+  <td class="text-end text-nowrap">
+    <a href="/jobs/{{ job.id }}" class="btn btn-sm btn-outline-secondary">상세</a>
+    {% if job.status == 'completed' %}
+      <a href="/api/jobs/{{ job.id }}/download" class="btn btn-sm btn-outline-primary">다운로드</a>
+    {% endif %}
+  </td>
+</tr>
+{% else %}
+<tr>
+  <td colspan="6" class="text-center text-muted py-4">등록된 작업이 없습니다.</td>
+</tr>
+{% endfor %}

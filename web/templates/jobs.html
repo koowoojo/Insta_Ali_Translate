@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">작업 목록</h1>
+  <a href="/" class="btn btn-sm btn-primary">+ 새 작업</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>URL</th>
+          <th>상태</th>
+          <th>단계</th>
+          <th>생성 시각</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="jobs-tbody"
+             hx-get="/jobs/table-body"
+             hx-trigger="every 5s"
+             hx-swap="innerHTML">
+        {% include "_jobs_table_body.html" %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="text-muted small mt-2">5초마다 자동 갱신됩니다.</p>
+{% endblock %}

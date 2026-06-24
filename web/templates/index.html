@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">단건 URL 제출</h5>
+      </div>
+      <div class="card-body">
+        <form id="single-job-form">
+          <div class="mb-3">
+            <label for="url" class="form-label">AliExpress 상품 URL</label>
+            <input type="url" class="form-control" id="url" name="url" required
+                   placeholder="https://www.aliexpress.com/item/...">
+          </div>
+          <button type="submit" class="btn btn-primary">작업 등록</button>
+        </form>
+        <div id="single-result" class="alert mt-3 d-none" role="alert"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">CSV 배치 업로드</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small">CSV 파일에 <code>url</code> 컬럼이 필요합니다.</p>
+        <form id="batch-form" enctype="multipart/form-data">
+          <div class="mb-3">
+            <input type="file" class="form-control" id="csv-file" name="file" accept=".csv" required>
+          </div>
+          <button type="submit" class="btn btn-secondary">배치 등록</button>
+        </form>
+        <div id="batch-result" class="alert mt-3 d-none" role="alert"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("single-job-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const url = document.getElementById("url").value.trim();
+    const box = document.getElementById("single-result");
+    try {
+      const resp = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || "등록 실패");
+      box.className = "alert alert-success mt-3";
+      box.textContent = `작업 등록 완료 — ID: ${data.id}, 상태: ${data.status}`;
+      box.classList.remove("d-none");
+      document.getElementById("url").value = "";
+    } catch (err) {
+      box.className = "alert alert-danger mt-3";
+      box.textContent = err.message;
+      box.classList.remove("d-none");
+    }
+  });
+
+  document.getElementById("batch-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById("csv-file");
+    const box = document.getElementById("batch-result");
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    try {
+      const resp = await fetch("/api/jobs/batch", { method: "POST", body: formData });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || "배치 등록 실패");
+      box.className = "alert alert-success mt-3";
+      box.textContent = `${data.count}건 작업이 등록되었습니다.`;
+      box.classList.remove("d-none");
+      fileInput.value = "";
+    } catch (err) {
+      box.className = "alert alert-danger mt-3";
+      box.textContent = err.message;
+      box.classList.remove("d-none");
+    }
+  });
+</script>
+{% endblock %}

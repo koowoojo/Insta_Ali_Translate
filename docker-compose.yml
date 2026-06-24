@@ -1,0 +1,40 @@
+# Insta_Ali Docker Compose — redis + web(FastAPI) + worker(RQ)
+#
+# 볼륨: ./assets, ./db, .env (호스트 데이터·설정 유지)
+# 포트: web 8000, redis 6379
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: uvicorn web.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./assets:/app/assets
+      - ./db:/app/db
+      - ./.env:/app/.env
+    depends_on:
+      - redis
+    environment:
+      # .env의 localhost Redis URL을 컨테이너 네트워크용으로 덮어씀
+      REDIS_URL: redis://redis:6379/0
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: python worker/run_worker.py
+    volumes:
+      - ./assets:/app/assets
+      - ./db:/app/db
+      - ./.env:/app/.env
+    depends_on:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    restart: unless-stopped
