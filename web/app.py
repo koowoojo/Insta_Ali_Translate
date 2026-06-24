@@ -29,8 +29,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Insta Ali Dashboard",
-    description="AliExpress 숏폼 파이프라인 웹 대시보드",
+    title="Insta Ali Translate API",
+    description="n8n 연동 AliExpress 릴스 파이프라인 API",
     lifespan=lifespan,
 )
 

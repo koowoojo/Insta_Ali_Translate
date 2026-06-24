@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
+    # --- 쇼케이스·외부 URL (nginx 경유) ---
+    showcase_base_url: str = "http://localhost:8080"
+
     # --- 자막 렌더링 (인스타 릴스 스타일) ---
     subtitle_font_path: str = "C:/Windows/Fonts/malgunbd.ttf"
     subtitle_font_size: int = 62
