@@ -366,3 +366,29 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 4. `python main.py --login` (AliExpress 세션)
 5. n8n Form에 AliExpress URL 제출 → 텔레그램·쇼케이스 확인
 
+---
+
+## 2026-06-24 — .env API 키·설정 이전
+
+### 사용자 요청
+- Insta_Ali 및 다른 프로젝트에서 필요한 API 키·설정을 Insta_Ali_Translate `.env`로 가져오기
+
+### 수행 작업
+- `E:\Vibe\Insta_Ali_Translate\.env` 생성 (`.gitignore` 대상, 커밋 안 함)
+
+| 변수 | 출처 |
+|------|------|
+| `OPENAI_API_KEY` | Insta_Ali `.env` |
+| `ANTHROPIC_API_KEY` | Insta_Ali `.env` |
+| `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE` | Insta_Ali `.env` |
+| `PROXY_URL` | Insta_Ali `.env` |
+| `TELEGRAM_BOT_TOKEN` | trader/trader `.env` |
+| `TELEGRAM_CHAT_ID` | trader/trader `.env` (coin_bot 등과 동일 ID) |
+| `N8N_ENCRYPTION_KEY` | 신규 랜덤 40자 생성 |
+| 기타 인프라·자막·SHOWCASE_BASE_URL | `.env.example` 기본값 |
+
+### 미이전·주의
+- **AliExpress 세션** (`assets/sessions/aliexpress_state.json`): Vibe 내 프로젝트에 파일 없음 → `python main.py --login` 필요
+- Insta_Ali `.env`의 TELEGRAM은 비어 있었음 → trader 프로젝트 값 사용
+- Insta_cupa의 GOOGLE_API_KEY·쿠팡 키는 본 파이프라인에 불필요하여 제외
+
