@@ -392,3 +392,27 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 - Insta_Ali `.env`의 TELEGRAM은 비어 있었음 → trader 프로젝트 값 사용
 - Insta_cupa의 GOOGLE_API_KEY·쿠팡 키는 본 파이프라인에 불필요하여 제외
 
+---
+
+## 2026-06-24 — 로컬 환경 기동 자동 실행
+
+### 수행 작업
+1. Docker Desktop 기동
+2. Python `.venv` 생성 + `pip install -r requirements.txt` + Playwright Chromium
+3. `docker compose up --build -d` 실행 (이미지 빌드·5서비스 기동 완료)
+4. `.env` UTF-8 BOM 제거 (web 컨테이너 `openai_api_key` 파싱 오류 수정)
+5. `docker compose restart web worker` → 5서비스 모두 `Up`
+
+### 현재 서비스 상태
+| 서비스 | 포트 | 상태 |
+|--------|------|------|
+| n8n | 5678 | Up |
+| nginx | 8080 | Up |
+| redis | 6379 | Up |
+| web (FastAPI) | 8000 | Up |
+| worker (RQ) | — | Up |
+
+### 사용자 수동 필요 (미완료)
+- **AliExpress 로그인 세션**: `python main.py --login` (브라우저에서 직접 로그인 후 Enter)
+- **n8n 워크플로 Import**: http://localhost:5678 → `n8n/workflows/reel-pipeline.json` Import + Telegram 크리덴셜 연결
+
