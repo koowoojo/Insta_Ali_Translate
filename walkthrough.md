@@ -288,3 +288,49 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 - 커밋 SHA: `git log -1 --oneline` (nginx + walkthrough 커밋)
 - 커밋 메시지: `feat: add nginx config for assets and showcase proxy`
 
+---
+
+## 2026-06-24 — Task 10: n8n reel-pipeline 워크플로 export
+
+### 사용자 요청 (부모 에이전트 Task 10)
+- `n8n/workflows/reel-pipeline.json` — n8n v1 호환 importable 워크플로 JSON
+- Form Trigger → URL 정규화 → POST /api/jobs → job_id 저장 → 60회 SplitInBatches 폴링(Wait 30s + GET) → completed/failed/timeout Telegram
+
+### 수행 작업
+1. **n8n/workflows/reel-pipeline.json** (신규)
+   - 노드 13개: Form Trigger, Normalize URL (Set), Create Job (HTTP POST), Set Job ID, Init Poll Slots (Code), Poll Loop (SplitInBatches), Wait 30s, Get Job Status, IF Completed, IF Failed, Telegram Success/Failure/Timeout
+   - Docker 내부 API URL: `http://web:8000/api/jobs`
+   - 텔레그램 링크: `http://localhost:8080` (SHOWCASE_BASE_URL 호스트 기준)
+   - Telegram credential·Chat ID는 placeholder (import 후 수동 연결 필요)
+2. **n8n/workflows/README.md** (신규)
+   - Import 절차, 수동 노드 재구성 표, 연결 다이어그램, 메시지 템플릿, 알려진 import 이슈
+
+### Import 시 수동 조정 필요
+- Telegram 크리덴셜 3노드 재연결
+- Chat ID placeholder → `.env` 값으로 교체
+- Wait/SplitInBatches 노드가 n8n 버전에 따라 import 경고 가능
+
+### Git
+- 커밋 SHA: `c941cd5`
+- 커밋 메시지: `feat: add n8n reel pipeline workflow export`
+
+---
+
+## 2026-06-24 — Task 11: README 및 E2E 검증 문서
+
+### 사용자 요청 (부모 에이전트 Task 11)
+- README.md: n8n + Opal-style 파이프라인 설명, Docker/API 키/.env, compose 기동, 포트, Form URL, AliExpress 세션, Telegram, 쇼케이스 URL, 설계·계획 문서 링크
+- E2E 검증 단계 (API curl, 쇼케이스, n8n Form)
+
+### 수행 작업
+1. **README.md** 전면 갱신
+   - Insta_Ali_Translate 브랜딩·아키텍처 요약
+   - Docker Compose 빠른 시작, `.env` 필수 변수 표
+   - 포트 5678/8080/8000, n8n Form·Telegram 설정, 쇼케이스 URL 패턴
+   - E2E 검증 4단계 (API, 브라우저, Form, 로그)
+   - 설계 스펙·구현 계획·n8n README 링크
+
+### Git
+- 커밋 SHA: `d90a13d`
+- 커밋 메시지: `docs: add setup guide and E2E verification steps`
+
