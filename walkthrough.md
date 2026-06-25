@@ -392,6 +392,10 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 - Insta_Ali `.env`의 TELEGRAM은 비어 있었음 → trader 프로젝트 값 사용
 - Insta_cupa의 GOOGLE_API_KEY·쿠팡 키는 본 파이프라인에 불필요하여 제외
 
+### 추가 (2026-06-25)
+- Hot Cleaner 암호화 cookies.json 거부 + `import_cookies.bat` 개선
+- **CDP 세션 캡처** 추가: `capture_chrome_session.bat`, `python main.py --capture-cdp`
+
 ---
 
 ## 2026-06-24 — 로컬 환경 기동 자동 실행
@@ -415,4 +419,20 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 ### 사용자 수동 필요 (미완료)
 - **AliExpress 로그인 세션**: `python main.py --login` (브라우저에서 직접 로그인 후 Enter)
 - **n8n 워크플로 Import**: http://localhost:5678 → `n8n/workflows/reel-pipeline.json` Import + Telegram 크리덴셜 연결
+
+---
+
+## 2026-06-24 — AliExpress 로그인 대안 추가
+
+### 사용자 문제
+- `python main.py --login` / Playwright 로그인 실패
+
+### 대응
+1. **세션 없이 스크래핑** — 공개 상품은 로그인 불필요 (기존 scraper 동작)
+2. **Chrome 쿠키 Import** — `python main.py --import-cookies cookies.json` + `쿠키_가져오기.bat`
+3. **로그인 개선** — Chrome/Edge 채널 우선, `ko.aliexpress.com` 접속
+4. **프록시** — `.env` `PROXY_URL` (README 문서화)
+
+### 추가 파일
+- `utils/session_import.py`, `tests/test_session_import.py`
 

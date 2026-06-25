@@ -58,26 +58,44 @@ SUBTITLE_FONT_PATH=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
 
 세션 파일이 없으면 스크래퍼가 로그인 없이 페이지를 엽니다. n8n Form에 URL을 넣고 먼저 시도해 보세요.
 
-#### 방법 B — Chrome 쿠키 가져오기 (권장 대안)
+#### 방법 B — Chrome CDP 세션 캡처 (권장, 쿠키 export 불필요)
 
-1. **일반 Chrome**에서 https://ko.aliexpress.com 로그인
-2. Chrome 웹스토어에서 **Cookie-Editor** (by cgagnier) 설치
-3. AliExpress 탭에서 확장 아이콘 클릭 → **Export** → **JSON** (배열 형식)
-4. `cookies.json`으로 저장
-
-**주의:** Hot Cleaner 등 **암호화 백업** `{version:2, data:"..."}` 형식은 지원하지 않습니다.
+Hot Cleaner / 암호화 쿠키 파일 없이 Chrome에서 직접 로그인한 세션을 가져옵니다.
 
 ```powershell
-# 파일을 이 배치에 끌어다 놓거나:
-import_cookies.bat
+capture_chrome_session.bat
+```
 
-# 또는 직접:
+1. 디버그 Chrome 창이 열림 → https://ko.aliexpress.com **로그인**
+2. 터미널에서 아무 키 누름 → `assets/sessions/aliexpress_state.json` 저장
+
+수동 실행:
+
+```powershell
+# 터미널 1: Chrome 디버그 모드
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="$env:TEMP\chrome-ali-session" "https://ko.aliexpress.com/"
+
+# 로그인 후 터미널 2:
+python main.py --capture-cdp
+```
+
+#### 방법 C — Cookie-Editor JSON export
+
+**Hot Cleaner 확장은 사용하지 마세요.** 암호화 백업 `{version:2, data:"..."}` 은 지원하지 않습니다.
+
+Chrome 웹스토어에서 **Cookie-Editor (by cgagnier)** 설치 후:
+
+1. https://ko.aliexpress.com 로그인
+2. 확장 → **Export** → **JSON 배열** (`[{"name":"...","domain":".aliexpress.com",...}]`)
+3. `import_cookies.bat`에 JSON 파일 끌어다 놓기
+
+```powershell
 python main.py --import-cookies C:\Users\YOU\Downloads\cookies.json
 ```
 
 세션 파일: `assets/sessions/aliexpress_state.json` (Docker `./assets` 볼륨과 공유)
 
-#### 방법 C — Playwright 로그인 (개선됨)
+#### 방법 D — Playwright 로그인
 
 `AliExpress_로그인.bat` 또는:
 
@@ -88,7 +106,7 @@ python main.py --login
 - 설치된 **Chrome → Edge → Chromium** 순으로 브라우저 시도
 - `https://ko.aliexpress.com` 한국 사이트로 접속
 
-#### 방법 D — 프록시 (지역 차단 시)
+#### 방법 E — 프록시 (지역 차단 시)
 
 `.env`에 `PROXY_URL=http://user:pass@host:port` 설정
 

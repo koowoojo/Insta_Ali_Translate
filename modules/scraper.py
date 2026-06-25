@@ -238,6 +238,63 @@ def save_login_session() -> None:
     logger.info("세션 저장 완료: %s", session_path)
 
 
+def capture_session_from_cdp(cdp_url: str = "http://127.0.0.1:9222") -> Path:
+    """
+    디버그 모드 Chrome(CDP)에 연결해 현재 쿠키를 storage_state로 저장한다.
+
+    Hot Cleaner 암호화 쿠키 export 없이, 사용자가 이미 로그인한 Chrome 탭의
+    세션을 그대로 가져올 때 사용한다.
+
+    사전 준비:
+        chrome.exe --remote-debugging-port=9222
+    AliExpress 로그인 후 이 함수를 호출한다.
+
+    Args:
+        cdp_url: Chrome remote debugging URL (기본 9222)
+
+    Returns:
+        저장된 storage_state Path
+    """
+    settings = get_settings()
+    session_path = Path(settings.aliexpress_session_path)
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+
+    logger.info("CDP 연결 시도: %s", cdp_url)
+    with sync_playwright() as playwright:
+        try:
+            browser = playwright.chromium.connect_over_cdp(cdp_url)
+        except Exception as exc:
+            raise PipelineError(
+                "scraping",
+                f"Chrome CDP 연결 실패 ({cdp_url}). "
+                "먼저 Chrome을 --remote-debugging-port=9222 로 실행하세요. "
+                f"원인: {exc}",
+            ) from exc
+
+        if not browser.contexts:
+            browser.close()
+            raise PipelineError(
+                "scraping",
+                "Chrome에 열린 컨텍스트가 없습니다. AliExpress 탭을 연 뒤 다시 시도하세요.",
+            )
+
+        context = browser.contexts[0]
+        ali_tab = next(
+            (p for p in context.pages if "aliexpress" in p.url.lower()),
+            context.pages[0] if context.pages else None,
+        )
+        if ali_tab is None:
+            browser.close()
+            raise PipelineError("scraping", "Chrome에 열린 탭이 없습니다.")
+
+        logger.info("세션 캡처 대상 탭: %s", ali_tab.url)
+        context.storage_state(path=str(session_path))
+        browser.close()
+
+    logger.info("CDP 세션 저장 완료: %s", session_path)
+    return session_path
+
+
 if __name__ == "__main__":
     from utils.logging_setup import setup_logging
 

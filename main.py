@@ -16,7 +16,7 @@ import logging
 
 from pathlib import Path
 
-from modules.scraper import save_login_session
+from modules.scraper import capture_session_from_cdp, save_login_session
 from utils.config import get_settings
 from utils.logging_setup import setup_logging
 from utils.session_import import import_cookies_file
@@ -35,9 +35,25 @@ def main() -> None:
     parser.add_argument(
         "--import-cookies",
         metavar="JSON",
-        help="Chrome Cookie-Editor 등에서보낸 쿠키 JSON → storage_state 변환",
+        help="Chrome Cookie-Editor JSON 배열 export → storage_state 변환",
+    )
+    parser.add_argument(
+        "--capture-cdp",
+        nargs="?",
+        const="http://127.0.0.1:9222",
+        metavar="CDP_URL",
+        help="디버그 Chrome(CDP)에서 세션 캡처 (기본 http://127.0.0.1:9222)",
     )
     args = parser.parse_args()
+
+    if args.capture_cdp:
+        try:
+            out = capture_session_from_cdp(args.capture_cdp)
+        except Exception as exc:
+            logger.error("%s", exc)
+            raise SystemExit(1) from exc
+        logger.info("CDP 세션 저장: %s", out)
+        return
 
     if args.import_cookies:
         settings = get_settings()
