@@ -436,3 +436,73 @@ tests/test_showcase_route.py::test_showcase_404_when_missing PASSED [100%]
 ### 추가 파일
 - `utils/session_import.py`, `tests/test_session_import.py`
 
+---
+
+## 2026-06-26 — 직접 테스트 (E2E·인프라 검증)
+
+### 사용자 요청
+- "직접 테스트 진행해줘"
+
+### 1. 인프라 헬스체크
+| 대상 | URL | 결과 |
+|------|-----|------|
+| Docker Compose 5서비스 | `docker compose ps` | redis, web, worker, nginx, n8n 모두 **Up** |
+| FastAPI Swagger | http://localhost:8000/docs | **200** |
+| n8n healthz | http://localhost:5678/healthz | **200** |
+| n8n UI | http://localhost:5678/ | 로드됨 (NPS 설문 표시) |
+
+### 2. pytest
+- **20 passed / 2 failed** (`tests/test_rq_tasks.py` — `no such table: jobs`, Insta_Ali 경로 잔존 이슈)
+- showcase, session_import, web_api 등 핵심 테스트 통과
+
+### 3. Docker API E2E (실패 — 스크래핑)
+- `POST /api/jobs` → job 등록·RQ 워커 수신 **정상**
+- 테스트 URL: `https://www.aliexpress.com/item/1005009378655342.html` (Vivicine DLP 프로젝터)
+- job_id 예: `e8bd6f5d-bfcb-459d-9362-e08d8792474c`
+- **결과**: `status=failed`, `error=페이지에서 MP4 비디오를 찾을 수 없습니다`
+- **원인**: Docker Linux headless Chromium에서 AliExpress가 봇/CAPTCHA 페이지 반환 (HTML ~278KB, MP4 0건, title 빈 문자열)
+- 로컬 Windows Playwright 동일 URL → MP4 **정상 탐지** (HTML ~399KB)
+- 실패 시 Telegram 알림 전송 **확인** (`utils/notifier.py`)
+
+### 4. 스크래퍼 개선 (modules/scraper.py)
+- `networkidle` → `domcontentloaded` + `wait_for_timeout(10s)` (JS 렌더 후 MP4 주입 대기)
+- `locale=ko-KR`, 데스크톱 Chrome User-Agent 추가
+- 빈 세션 파일(`cookies: []`)은 storage_state 로드 스킵 (`st_size > 50`)
+- worker 이미지 재빌드·재기동 완료
+- **Docker 내 여전히 봇 차단** — UA/대기만으로는 해결 불가
+
+### 5. 로컬 CLI 전체 파이프라인 E2E (성공)
+```powershell
+python main.py --url "https://www.aliexpress.com/item/1005009378655342.html"
+```
+- job_id: **`7fc9b359-6362-471f-bc4d-877dc209283f`**
+- 소요: 약 **3분 20초**
+- 단계별 결과:
+  | 단계 | 결과 |
+  |------|------|
+  | scraping | MP4 다운로드 8.4MB |
+  | transcribing | Whisper STT 29초 분량 |
+  | scripting | Claude Step1+2 |
+  | tts | OpenAI TTS 38.7초 (목표 38.6초) |
+  | editing | final_shorts.mp4 13.5MB |
+  | showcase | showcase.html 생성 |
+- 산출물: `assets/jobs/7fc9b359-6362-471f-bc4d-877dc209283f/`
+
+### 6. nginx·쇼케이스 브라우저 확인
+| URL | HTTP |
+|-----|------|
+| http://localhost:8080/assets/jobs/7fc9b359-.../final_shorts.mp4 | **200** video/mp4 |
+| http://localhost:8080/assets/jobs/7fc9b359-.../showcase.html | **200** — Opal 스타일 UI (플레이어·대본·나레이션) |
+| http://localhost:8080/showcase/{job_id} | **404** (CLI 실행은 DB Job 미등록 — API 경로는 completed Job 필요) |
+
+### 7. CDP 세션 캡처
+- Chrome `--remote-debugging-port=9222` 기동 시도
+- `python main.py --capture-cdp` → `assets/sessions/aliexpress_state.json` 저장
+- **주의**: 로그인 전 `chrome://intro/` 캡처 시 빈 세션(`cookies: []`) — AliExpress 로그인 후 재캡처 필요
+
+### Docker E2E 완료를 위한 다음 단계
+1. Chrome CDP 창에서 **AliExpress 로그인** 후 `capture_chrome_session.bat` 재실행
+2. 또는 Cookie-Editor(cgagnier) JSON export → `import_cookies.bat`
+3. n8n: http://localhost:5678 → `reel-pipeline.json` Import + Telegram 연결
+4. (대안) Docker worker 대신 호스트 Playwright 사용 아키텍처 검토 — Linux headless 봇 차단 우회
+

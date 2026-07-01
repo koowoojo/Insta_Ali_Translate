@@ -4,3 +4,5 @@ __pycache__/
 db/jobs.db
 assets/
 logs/
+cookies.json
+n8n_data/

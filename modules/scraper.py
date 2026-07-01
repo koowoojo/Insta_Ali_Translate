@@ -29,6 +29,12 @@ from utils.exceptions import PipelineError, VideoNotFoundError
 # 모듈 전용 로거 — setup_logging() 호출 후 루트 핸들러에 전파된다.
 logger = logging.getLogger(__name__)
 
+# Linux Docker headless 봇 차단 완화용 데스크톱 Chrome UA
+_DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
 # 페이지 소스 전역 탐색용 MP4 URL 정규식 (video 태그·video_url 키워드 매칭 실패 시 폴백)
 MP4_PATTERN = re.compile(r"https?://[^\s\"'<>]+\.mp4", re.IGNORECASE)
 
@@ -155,15 +161,20 @@ def scrape_video(url: str, output_path: str, max_retries: int = 3) -> str:
                 browser = playwright.chromium.launch(**launch_kwargs)
 
                 # 저장된 AliExpress 로그인 세션이 있으면 storage_state 로드
-                context_kwargs: dict = {}
+                context_kwargs: dict = {
+                    "locale": "ko-KR",
+                    "user_agent": _DEFAULT_USER_AGENT,
+                }
                 session_path = Path(settings.aliexpress_session_path)
-                if session_path.exists():
+                if session_path.exists() and session_path.stat().st_size > 50:
                     context_kwargs["storage_state"] = str(session_path)
                     logger.debug("세션 storage_state 로드: %s", session_path)
 
                 context = browser.new_context(**context_kwargs)
                 page = context.new_page()
-                page.goto(url, wait_until="networkidle", timeout=60000)
+                # AliExpress 상품 영상 URL은 JS 렌더 후 주입되므로 domcontentloaded + 추가 대기
+                page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_timeout(10_000)
                 html = page.content()
                 mp4_url = find_mp4_url_in_html(html, base_url=url)
                 browser.close()
