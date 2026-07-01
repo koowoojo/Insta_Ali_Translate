@@ -506,3 +506,25 @@ python main.py --url "https://www.aliexpress.com/item/1005009378655342.html"
 3. n8n: http://localhost:5678 → `reel-pipeline.json` Import + Telegram 연결
 4. (대안) Docker worker 대신 호스트 Playwright 사용 아키텍처 검토 — Linux headless 봇 차단 우회
 
+---
+
+## 2026-07-02 — GitHub remote 생성 및 push
+
+### 사용자 요청
+- insane-search 비교 후 옵션 4: GitHub remote 생성 후 push
+
+### 수행 작업
+1. GitHub CLI(`gh` 2.95.0) winget 설치
+2. `.gitignore`에 `cookies.json`, `n8n_data/` 추가
+3. 미커밋 변경 커밋: `2245dbc` — scraper 개선 + walkthrough E2E 기록
+4. GitHub 저장소 생성: **https://github.com/koowoojo/Insta_Ali_Translate**
+5. `git remote add origin` + `git push -u origin master` 완료
+
+### 저장소 정보
+| 항목 | 값 |
+|------|-----|
+| URL | https://github.com/koowoojo/Insta_Ali_Translate |
+| 브랜치 | `master` (tracking `origin/master`) |
+| 설명 | n8n + Docker AliExpress → 한국어 릴스 파이프라인 |
+| 공개 여부 | public |
+
